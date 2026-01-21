@@ -1,18 +1,24 @@
-# Microsoft Agent Framework Backend Sample
 
-이 프로젝트는 **Microsoft Agent Framework Backend**를 구성하고 테스트하기 위한 샘플 프로젝트입니다. FastAPI를 기반으로 구축되었으며, AI 에이전트, 스레드, 워크플로우 등을 관리하는 RESTful API를 제공합니다.
+# Microsoft Agent Framework Sample
+
+이 프로젝트는 **Microsoft Agent Framework** 기반의 AI 백엔드 및 프론트엔드 샘플입니다. FastAPI로 구축된 RESTful API와 React+Vite 기반의 웹 UI를 제공합니다.
 
 ## 프로젝트 구조
 
 ```
 src/
-  backend/       # 백엔드 소스 코드 (FastAPI)
-    routers/     # API 라우터 (에이전트, 스레드 등)
-    main.py      # 애플리케이션 진입점
-    models.py    # 데이터 모델
-  frontend/      # 프론트엔드 소스 코드 (예정)
-tests/           # 테스트 코드
-uploads/         # 파일 업로드 디렉토리
+    backend/       # FastAPI 백엔드 (API, 데이터모델, 라우터)
+        routers/     # API 라우터 (agents, threads, runs, files, workflows, system)
+        main.py      # FastAPI 앱 진입점
+        models.py    # Pydantic 데이터 모델
+        database.py  # 인메모리 DB (Mock)
+    frontend/      # React + TypeScript + Vite 프론트엔드
+        src/         # 주요 프론트엔드 소스
+            api/       # API 클라이언트
+            types/     # 타입 정의
+            ...
+tests/           # pytest 기반 백엔드 테스트
+uploads/         # 업로드 파일 저장소
 ```
 
 ## 시작하기 (Getting Started)
@@ -20,37 +26,22 @@ uploads/         # 파일 업로드 디렉토리
 ### 사전 요구 사항 (Prerequisites)
 
 - Python 3.9 이상
-- pip
+- Node.js 18+ 및 npm
 
-### 설치 (Installation)
+---
 
-1. 리포지토리를 클론하고 프로젝트 루트로 이동합니다.
-
-2. 가상 환경을 생성하고 활성화하는 것을 권장합니다:
-   ```bash
-   cd /src/backend
-   python -m venv .venv
-   # Windows
-   .\.venv\Scripts\Activate.ps1
- 
-   ```
-
-3. 필요한 패키지를 설치합니다:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## 실행 방법 (Running the App)
-
-프로젝트 루트 디렉토리에서 다음 명령어로 백엔드 서버를 실행합니다:
+### 백엔드 설치 및 실행
 
 ```bash
+cd src/backend
+python -m venv .venv
+# Windows
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 uvicorn src.backend.main:app --reload
 ```
 
-- `--reload`: 코드가 변경되면 서버를 자동으로 재시작합니다 (개발 모드).
-
-서버가 정상적으로 실행되면 터미널에 다음과 같은 로그가 표시됩니다:
+서버가 정상적으로 실행되면:
 
 ```
 INFO:     Uvicorn running on http://127.0.0.1:8000
@@ -58,6 +49,78 @@ INFO:     Uvicorn running on http://127.0.0.1:8000
 Agent Framework API 서버를 시작합니다...
 API 문서 (Swagger UI): http://localhost:8000/docs
 ```
+
+### 프론트엔드 설치 및 실행
+
+```bash
+cd src/frontend
+npm install
+npm run dev
+```
+
+---
+
+## API 명세 및 주요 기능
+
+서버 실행 후 웹 브라우저에서 다음 주소로 API 문서를 확인할 수 있습니다.
+
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+### 주요 API 엔드포인트
+
+| 컴포넌트 | 경로 (Prefix) | 설명 |
+| :--- | :--- | :--- |
+| **System** | `/api/v1` | 서버 상태, 헬스 체크(`/health`), 메트릭(`/telemetry/metrics`) |
+| **Files** | `/api/v1/files` | 파일 업로드/목록/삭제 |
+| **Agents** | `/api/v1/agents` | AI 에이전트 생성/조회/수정/삭제 |
+| **Threads** | `/api/v1/threads` | 대화방(스레드) 생성/조회/삭제, 메시지 관리 |
+| **Runs** | `/api/v1/threads/{thread_id}/runs` | 에이전트 실행 및 상태 조회 |
+| **Workflows** | `/api/v1/workflows` | 워크플로우 목록/실행/상태 |
+
+자세한 API 스펙은 [API_SPECIFICATION.md](API_SPECIFICATION.md) 참고
+
+---
+
+## 예시 시나리오 (Sample Usage)
+
+**"매출 보고서를 분석해주는 AI 비서"**
+
+1. `Files API`로 `sales_data.csv` 업로드
+2. `Agents API`로 '데이터 분석가' 에이전트 생성
+3. `Threads API`로 새 스레드 생성, 질문 메시지 추가
+4. `Runs API`로 실행 요청 (Agent + Thread)
+5. `Runs API`로 상태 확인, `Threads API`로 답변 메시지 조회
+
+---
+
+## 프론트엔드 주요 기능
+
+- 에이전트 선택 및 생성
+- 대화방(스레드) 생성 및 메시지 전송
+- 파일 첨부 및 업로드
+- AI 응답 실시간 확인
+
+---
+
+## 테스트 (Testing)
+
+백엔드 테스트는 pytest로 실행합니다:
+
+```bash
+pytest
+```
+
+---
+
+## 참고 및 문서
+
+- [API_SPECIFICATION.md](API_SPECIFICATION.md): 전체 API 명세
+- `/src/frontend/README.md`: 프론트엔드 개발 참고
+
+---
+
+문의 및 기여: [GitHub Issues](https://github.com/bmtjpark/microsoft-agent-framework-agent-sample/issues)
 
 ## API 문서 및 기능 (API Documentation)
 

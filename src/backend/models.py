@@ -6,6 +6,7 @@ class FileResponse(BaseModel):
     id: str
     filename: str
     purpose: str
+    mime_type: str
     created_at: int
 
 # --- 에이전트 모델 (Agent Models) ---
@@ -42,14 +43,14 @@ class ThreadResponse(BaseModel):
 class MessageCreate(BaseModel):
     role: str = Field(..., pattern="^(user|assistant)$")  # 역할 (user 또는 assistant)
     content: str  # 메시지 내용
-    attachments: Optional[List[str]] = None # 파일 ID 목록
+    attachments: Optional[List[Dict[str, str]]] = None # 파일 정보 목록 [{id, type}]
 
 class MessageResponse(BaseModel):
     id: str
     thread_id: str
     role: str
     content: List[Any] # Agent Framework에서는 복잡한 콘텐츠(이미지 등)를 포함할 수 있음
-    attachments: Optional[List[str]] = None
+    attachments: Optional[List[Dict[str, str]]] = None # [{id, type}]
     created_at: int
 
 # --- 실행 모델 (Run Models) ---

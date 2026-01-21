@@ -134,8 +134,8 @@ function App() {
     if ((!input.trim() && attachedFiles.length === 0) || !currentThread || !selectedAgent) return;
 
     const content = input;
-    const attachments = attachedFiles.map(f => f.id);
-    
+    // 첨부파일을 [{id, type}]로 변환
+    const attachments = attachedFiles.map(f => ({ id: f.id, type: f.mime_type }));
     setInput('');
     setAttachedFiles([]); // Clear attachments
     setIsSending(true);
@@ -185,9 +185,9 @@ function App() {
         <div className="p-4 border-b border-gray-200 flex justify-between items-center">
           <h1 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
             <Bot className="w-6 h-6 text-blue-600" />
-            Agent Chat
+            에이전트 채팅
           </h1>
-          <button onClick={() => setShowCreateAgent(!showCreateAgent)} className="p-1 hover:bg-gray-200 rounded text-gray-600" title="Create Agent">
+          <button onClick={() => setShowCreateAgent(!showCreateAgent)} className="p-1 hover:bg-gray-200 rounded text-gray-600" title="에이전트 생성">
             <Plus className="w-5 h-5" />
           </button>
         </div>
@@ -195,39 +195,39 @@ function App() {
           
           {showCreateAgent ? (
              <form onSubmit={handleCreateAgent} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm space-y-3 mb-4">
-                <h3 className="text-sm font-semibold text-gray-700">New Agent</h3>
+                <h3 className="text-sm font-semibold text-gray-700">새 에이전트</h3>
                 <input 
                   className="w-full text-sm border p-2 rounded" 
-                  placeholder="Name" 
+                  placeholder="이름" 
                   value={newAgent.name}
                   onChange={e => setNewAgent({...newAgent, name: e.target.value})}
                   required
                 />
                 <input 
                   className="w-full text-sm border p-2 rounded" 
-                  placeholder="Model (e.g. gpt-4o-mini)" 
+                  placeholder="모델명 (예: gpt-4o-mini)" 
                   value={newAgent.model}
                   onChange={e => setNewAgent({...newAgent, model: e.target.value})}
                   required
                 />
                 <p className="text-xs text-gray-500 px-1">
-                  * Must match your Azure AI Project deployment name
+                  * Azure AI Project에 배포된 모델명과 일치해야 합니다.
                 </p>
                 <textarea 
                   className="w-full text-sm border p-2 rounded" 
-                  placeholder="Instructions" 
+                  placeholder="지시사항 (페르소나)" 
                   rows={2}
                   value={newAgent.instructions}
                   onChange={e => setNewAgent({...newAgent, instructions: e.target.value})}
                   required
                 />
                 <div className="flex gap-2">
-                   <button type="submit" className="flex-1 bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-700">Create</button>
-                   <button type="button" onClick={() => setShowCreateAgent(false)} className="flex-1 bg-gray-100 text-gray-600 text-xs py-2 rounded hover:bg-gray-200">Cancel</button>
+                   <button type="submit" className="flex-1 bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-700">생성</button>
+                   <button type="button" onClick={() => setShowCreateAgent(false)} className="flex-1 bg-gray-100 text-gray-600 text-xs py-2 rounded hover:bg-gray-200">취소</button>
                 </div>
              </form>
           ) : (
-            <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Agents</div>
+            <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">에이전트 목록</div>
           )}
 
           {agents.map(agent => (
@@ -253,9 +253,9 @@ function App() {
           
           {agents.length === 0 && !showCreateAgent && (
             <div className="text-sm text-gray-400 text-center py-4 flex flex-col items-center gap-2">
-               No agents found.
+               등록된 에이전트가 없습니다.
                <button onClick={() => setShowCreateAgent(true)} className="text-blue-600 text-xs hover:underline">
-                 Create your first agent
+                 첫 에이전트 생성하기
                </button>
             </div>
           )}
@@ -321,12 +321,26 @@ function App() {
                       {/* Display Attachments if any */}
                       {msg.attachments && msg.attachments.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
-                           {msg.attachments.map((attId, idx) => (
-                              <div key={idx} className="flex items-center gap-1 text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
-                                <FileIcon className="w-3 h-3" />
-                                <span>File attachment ({attId.slice(0, 4)}...)</span>
-                              </div>
-                           ))}
+                           {msg.attachments.map((att, idx) => {
+                              // 이미지 미리보기 지원
+                              if (att.type && att.type.startsWith('image/')) {
+                                return (
+                                  <div key={idx} className="flex items-center gap-1 text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
+                                    <img src={`/uploads/${att.id}_thumb`} alt="첨부 이미지" className="w-8 h-8 object-cover rounded mr-1" onError={e => (e.currentTarget.style.display='none')} />
+                                    <span>이미지 첨부 ({att.id.slice(0, 4)}...)</span>
+                                    <a href={`/uploads/${att.id}_${att.filename || 'file'}`} target="_blank" rel="noopener noreferrer" className="ml-1 underline">다운로드</a>
+                                  </div>
+                                );
+                              }
+                              // 기타 파일(아이콘+다운로드)
+                              return (
+                                <div key={idx} className="flex items-center gap-1 text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
+                                  <FileIcon className="w-3 h-3" />
+                                  <span>파일 첨부 ({att.id.slice(0, 4)}...)</span>
+                                  <a href={`/uploads/${att.id}_${att.filename || 'file'}`} target="_blank" rel="noopener noreferrer" className="ml-1 underline">다운로드</a>
+                                </div>
+                              );
+                           })}
                         </div>
                       )}
                     </div>
@@ -392,10 +406,10 @@ function App() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 space-y-4">
+           <div className="flex-1 flex flex-col items-center justify-center text-gray-400 space-y-4">
              <Bot className="w-16 h-16 text-gray-200" />
-             <p className="text-lg font-medium text-gray-600">Select an agent to start chatting</p>
-          </div>
+             <p className="text-lg font-medium text-gray-600">에이전트를 선택해 대화를 시작하세요</p>
+           </div>
         )}
       </div>
     </div>

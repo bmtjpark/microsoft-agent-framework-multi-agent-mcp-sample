@@ -8,6 +8,7 @@ const client = axios.create({
   },
 });
 
+
 export const api = {
   // Agents
   getAgents: () => client.get<Agent[]>('/agents').then(r => r.data),
@@ -16,7 +17,7 @@ export const api = {
   // Threads
   createThread: () => client.post<Thread>('/threads', {}).then(r => r.data),
   getMessages: (threadId: string) => client.get<Message[]>(`/threads/${threadId}/messages`).then(r => r.data),
-  createMessage: (threadId: string, content: string, attachments: string[] = []) => 
+  createMessage: (threadId: string, content: string, attachments: {id: string, type: string}[] = []) => 
     client.post<Message>(`/threads/${threadId}/messages`, { role: 'user', content, attachments }).then(r => r.data),
   
   // Files

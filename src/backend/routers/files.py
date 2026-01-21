@@ -28,6 +28,7 @@ async def upload_file(file: UploadFile = File(...), purpose: str = "agents"):
         id=file_id,
         filename=file.filename,
         purpose=purpose,
+        mime_type=file.content_type or "application/octet-stream",
         created_at=int(time.time())
     )
     files_db[file_id] = new_file

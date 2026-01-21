@@ -19,12 +19,13 @@ export interface Thread {
   created_at: number;
 }
 
+
 export interface Message {
   id: string;
   thread_id: string;
   role: 'user' | 'assistant';
   content: string | any[];
-  attachments?: string[]; // Attached File IDs
+  attachments?: { id: string; type: string }[];
   created_at: number;
 }
 
@@ -32,6 +33,7 @@ export interface FileData {
   id: string;
   filename: string;
   purpose: string;
+  mime_type: string;
   created_at: number;
 }
 

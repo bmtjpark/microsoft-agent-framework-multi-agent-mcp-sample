@@ -49,13 +49,42 @@ async def create_message(thread_id: str, message: MessageCreate):
     if thread_id not in threads_db:
         raise HTTPException(status_code=404, detail="스레드를 찾을 수 없습니다.")
     
+    import os
+    import pdfplumber
+    from fastapi import status
     msg_id = str(uuid.uuid4())
+    attachments = message.attachments or []
+    if attachments and isinstance(attachments[0], str):
+        attachments = [{"id": fid, "type": "unknown"} for fid in attachments]
+
+    # 첨부파일이 PDF인 경우, 내용을 추출하여 content에 추가
+    pdf_texts = []
+    UPLOAD_DIR = "uploads"
+    for att in attachments:
+        if att.get("type", "").lower() == "pdf" or att.get("type", "").lower() == "application/pdf":
+            file_id = att["id"]
+            # 업로드 파일명 패턴: {file_id}_원본파일명
+            for fname in os.listdir(UPLOAD_DIR):
+                if fname.startswith(file_id + "_") and fname.lower().endswith(".pdf"):
+                    file_path = os.path.join(UPLOAD_DIR, fname)
+                    try:
+                        with pdfplumber.open(file_path) as pdf:
+                            text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+                        pdf_texts.append(f"[첨부 PDF: {fname}]\n{text}")
+                    except Exception as e:
+                        pdf_texts.append(f"[첨부 PDF: {fname}]\n(파일 내용 추출 실패: {e})")
+
+    # 원본 메시지 + PDF 내용 합치기
+    full_content = message.content
+    if pdf_texts:
+        full_content += "\n\n" + "\n\n".join(pdf_texts)
+
     new_message = MessageResponse(
         id=msg_id,
         thread_id=thread_id,
         role=message.role,
-        content=[{"type": "text", "text": {"value": message.content}}], # 단순화된 메시지 구조
-        attachments=message.attachments or [],
+        content=[{"type": "text", "text": {"value": full_content}}],
+        attachments=attachments,
         created_at=int(time.time())
     )
     messages_db[thread_id].append(new_message)
