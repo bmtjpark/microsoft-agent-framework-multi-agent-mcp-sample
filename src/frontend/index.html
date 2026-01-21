@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frontend</title>
+  </head>
+  <body>
+    <div id="root">
+      <div style="padding: 20px; font-family: sans-serif;">
+        Initializing App... (If this persists, React failed to mount)
+      </div>
+    </div>
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        document.getElementById('root').innerHTML += `
+          <div style="color: red; margin-top: 20px; padding: 10px; border: 1px solid red; background: #fff0f0;">
+            <h3>Global Error Catch</h3>
+            <p><strong>Message:</strong> ${message}</p>
+            <p><strong>Source:</strong> ${source}:${lineno}:${colno}</p>
+            <pre>${error ? error.stack : ''}</pre>
+          </div>
+        `;
+      };
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
