@@ -21,14 +21,14 @@ tests/           # pytest 기반 백엔드 테스트
 uploads/         # 업로드 파일 저장소
 ```
 
-## 시작하기 (Getting Started)
-
-### 사전 요구 사항 (Prerequisites)
+## 사전 요구 사항 (Prerequisites)
 
 - Python 3.9 이상
 - Node.js 18+ 및 npm
 
 ---
+
+## 설치 및 실행
 
 ### 백엔드 설치 및 실행
 
@@ -78,6 +78,124 @@ npm run dev
 | **Runs** | `/api/v1/threads/{thread_id}/runs` | 에이전트 실행 및 상태 조회 |
 | **Workflows** | `/api/v1/workflows` | 워크플로우 목록/실행/상태 |
 
+#### 상세 흐름 및 활용 예시
+
+이 시스템의 핵심 흐름은 **"특정 에이전트(Agent)를 대화방(Thread)에 불러와서 실행(Run)시킨다"**는 것입니다.
+
+**예시: "매출 보고서를 분석해주는 AI 비서"**
+
+1. `Files API`로 `sales_data.csv` 업로드
+2. `Agents API`로 '데이터 분석가' 에이전트 생성
+3. `Threads API`로 새 스레드 생성, 질문 메시지 추가
+4. `Runs API`로 실행 요청 (Agent + Thread)
+5. `Runs API`로 상태 확인, `Threads API`로 답변 메시지 조회
+
+#### 컴포넌트 관계 및 상세 설명
+
+* **Agents (두뇌 & 도구):** 모델(예: GPT-4), 시스템 지시사항(페르소나), 사용할 도구(Tools) 설정
+* **Threads (기억 & 대화):** 사용자와 에이전트 간의 대화 기록(Messages) 저장
+* **Runs (실행 & 처리):** 특정 Thread의 대화 내용을 바탕으로 Agent가 응답 생성
+* **Files (지식 & 데이터):** 에이전트가 분석하거나 참고할 문서
+* **Workflows (오케스트레이션):** 복잡한 업무 프로세스나 여러 에이전트의 협업 정의
+
+#### UI 개발을 위한 API 호출 순서
+
+웹 프론트엔드에서 **AI 채팅 애플리케이션**을 구현할 때의 상세 API 호출 흐름입니다.
+
+1. 에이전트 목록 조회 (`GET /api/v1/agents`)
+2. 스레드 생성 (`POST /api/v1/threads`)
+3. 메시지 전송 (`POST /api/v1/threads/{thread_id}/messages`)
+4. 실행 요청 (`POST /api/v1/runs`)
+5. 상태 확인 (`GET /api/v1/runs/{run_id}`)
+6. 답변 조회 (`GET /api/v1/threads/{thread_id}/messages`)
+
+**요약 흐름도 (Sequence Diagram)**
+
+```mermaid
+sequenceDiagram
+    participant User as 사용자 (Web UI)
+    participant API as 백엔드 API (Backend)
+
+    User->>API: 1. 에이전트 목록 조회 (GET /agents)
+    User->>User: 에이전트 선택
+    User->>API: 2. 스레드 생성 (POST /threads)
+    API-->>User: thread_id 반환
+
+    loop 대화 반복
+        User->>API: 3. 메시지 전송 (POST /threads/{id}/messages)
+        User->>API: 4. 실행(Run) 요청 (POST /runs)
+        API-->>User: run_id 반환
+
+        loop 완료될 때까지 (Polling)
+            User->>API: 5. 상태 확인 (GET /runs/{run_id})
+            API-->>User: status: "in_progress" -> "completed"
+        end
+
+        User->>API: 6. 답변 조회 (GET /threads/{id}/messages)
+        API-->>User: 에이전트 답변 반환
+        User->>User: 화면 업데이트
+    end
+```
+
+---
+
+## 프론트엔드 주요 기능
+
+- 에이전트 선택 및 생성
+- 대화방(스레드) 생성 및 메시지 전송
+- 파일 첨부 및 업로드
+- AI 응답 실시간 확인
+
+---
+
+## 테스트 (Testing)
+
+### 백엔드 테스트 실행 방법
+
+테스트는 pytest로 실행하며, Windows 환경에서는 PYTHONPATH를 반드시 프로젝트 루트로 지정해야 합니다.
+
+#### 1. 가상환경 활성화 및 테스트 실행 (Windows PowerShell)
+
+```powershell
+cd src/backend
+.\.venv\Scripts\Activate.ps1
+$env:PYTHONPATH='C:/workspace/microsoft-agent-framework-agent-sample'; pytest tests
+```
+
+#### 2. (Linux/macOS)
+
+```bash
+cd src/backend
+source .venv/bin/activate
+PYTHONPATH=$(pwd)/../.. pytest tests
+```
+
+#### 3. 테스트 결과
+모든 테스트가 통과하면 아래와 같이 출력됩니다:
+
+```
+============================= test session starts =============================
+... (생략) ...
+============================== 7 passed in XXs ===============================
+```
+
+#### 참고
+- PYTHONPATH를 지정하지 않으면 'No module named src' 오류가 발생할 수 있습니다.
+- 자세한 경고/에러는 pytest 출력에서 확인하세요.
+
+---
+
+## 참고 및 문서
+
+- [API_SPECIFICATION.md](API_SPECIFICATION.md): 전체 API 명세
+- `/src/frontend/README.md`: 프론트엔드 개발 참고
+
+---
+
+## 문의 및 기여
+
+- [GitHub Issues](https://github.com/bmtjpark/microsoft-agent-framework-agent-sample/issues)
+
 자세한 API 스펙은 [API_SPECIFICATION.md](API_SPECIFICATION.md) 참고
 
 ---
@@ -103,13 +221,41 @@ npm run dev
 
 ---
 
+
 ## 테스트 (Testing)
 
-백엔드 테스트는 pytest로 실행합니다:
+### 백엔드 테스트 실행 방법
+
+테스트는 pytest로 실행하며, Windows 환경에서는 PYTHONPATH를 반드시 프로젝트 루트로 지정해야 합니다.
+
+#### 1. 가상환경 활성화 및 테스트 실행 (Windows PowerShell)
+
+```powershell
+cd src/backend
+.\.venv\Scripts\Activate.ps1
+$env:PYTHONPATH='C:/workspace/microsoft-agent-framework-agent-sample'; pytest tests
+```
+
+#### 2. (Linux/macOS)
 
 ```bash
-pytest
+cd src/backend
+source .venv/bin/activate
+PYTHONPATH=$(pwd)/../.. pytest tests
 ```
+
+#### 3. 테스트 결과
+모든 테스트가 통과하면 아래와 같이 출력됩니다:
+
+```
+============================= test session starts =============================
+... (생략) ...
+============================== 7 passed in XXs ===============================
+```
+
+#### 참고
+- PYTHONPATH를 지정하지 않으면 'No module named src' 오류가 발생할 수 있습니다.
+- 자세한 경고/에러는 pytest 출력에서 확인하세요.
 
 ---
 
