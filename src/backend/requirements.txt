@@ -2,8 +2,9 @@ fastapi
 uvicorn
 pydantic
 python-dotenv
-agent-framework
 azure-ai-projects
 azure-identity
-azure-search-documents
 python-multipart
+openai
+httpx
+pytest

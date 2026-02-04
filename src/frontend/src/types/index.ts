@@ -45,3 +45,24 @@ export interface Run {
   created_at: number;
   last_error?: any;
 }
+
+export interface WorkflowExecution {
+  execution_id: string;
+  workflow_name: string;
+  status: 'queued' | 'running' | 'in_progress' | 'completed' | 'failed' | 'waiting_for_approval';
+  result?: {
+    plan?: string;
+    steps: Array<{
+      agent: string;
+      action: string;
+      details: string;
+      timestamp: number;
+    }>;
+  };
+  inputs?: Record<string, any>;
+  created_at: number;
+}
+
+export interface WorkflowInput {
+  inputs: Record<string, any>;
+}

@@ -75,4 +75,6 @@ class WorkflowExecutionResponse(BaseModel):
     workflow_name: str
     status: str
     result: Optional[Any] = None
+    inputs: Optional[Dict[str, Any]] = None
+    created_at: int
 

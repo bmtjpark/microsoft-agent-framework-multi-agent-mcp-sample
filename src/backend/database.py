@@ -11,3 +11,6 @@ messages_db = {}
 
 # Key: run_id, Value: RunResponse
 runs_db = {}
+
+# Key: agent_id, Value: thread_id (Latest active thread)
+agent_active_threads = {}

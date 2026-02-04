@@ -1,21 +1,42 @@
 
-# Microsoft Agent Framework Sample
+# Multi-Agent HR Onboarding System (Azure AI Agents)
 
-이 프로젝트는 **Microsoft Agent Framework** 기반의 AI 백엔드 및 프론트엔드 샘플입니다. FastAPI로 구축된 RESTful API와 React+Vite 기반의 웹 UI를 제공합니다.
+이 프로젝트는 **Azure AI Agents Service** (구 Azure Foundry Agents)를 활용하여 HR 온보딩 프로세스를 자동화한 **멀티 에이전트 시스템**입니다.
+FastAPI 백엔드와 React 프론트엔드로 구성되어 있으며, **Identity, IT, Training** 전문 에이전트들이 협력하여 **계획(Plan) → 승인(Approve) → 실행(Execute)** 워크플로우를 수행합니다.
 
-## 프로젝트 구조
+## ✨ 핵심 변경 사항 및 기능
+
+- **Azure AI Agents 기반 온보딩**:
+  - 기존의 모의(Mock) 에이전트 대신 **실제 Azure AI Agents**를 사용하여 Identity, IT, Training 작업을 수행합니다.
+  - 비동기 작업 처리 및 상태 관리를 통해 안정적인 워크플로우를 제공합니다.
+  
+- **워크플로우 (Plan → Approve → Execute)**:
+  1. **Plan**: 사용자 입력(이름, 역할)을 분석하여 에이전트가 필요한 리소스 계획을 수립합니다.
+  2. **Approve**: 사용자가 AI가 제안한 계획을 검토하고 승인합니다.
+  3. **Execute**: 승인된 계획에 따라 각 에이전트가 작업을 병렬로 실행합니다.
+
+- **에이전트 메모리 지속성 (Agent Memory)**:
+  - 각 에이전트(Identity, IT, Training)와의 채팅 스레드(Thread)를 보존하여, 사용자가 언제든 이전 대화를 이어서 진행할 수 있습니다.
+
+- **UI/UX 개선 및 현지화**:
+  - 직관적인 타임라인 UI 및 Markdown 렌더링 개선.
+  - 모든 에이전트 응답 및 시스템 메시지 **한국어** 지원.
+
+## 📁 프로젝트 구조 (업데이트됨)
 
 ```
 src/
-    backend/       # FastAPI 백엔드 (API, 데이터모델, 라우터)
-        routers/     # API 라우터 (agents, threads, runs, files, workflows, system)
-        main.py      # FastAPI 앱 진입점
-        models.py    # Pydantic 데이터 모델
-        database.py  # 인메모리 DB (Mock)
-    frontend/      # React + TypeScript + Vite 프론트엔드
-        src/         # 주요 프론트엔드 소스
-            api/       # API 클라이언트
-            types/     # 타입 정의
+    backend/       # FastAPI 백엔드
+        routers/
+            agents.py    # 에이전트 CRUD 및 스레드(메모리) 관리
+            workflows.py # HR 온보딩 로직 (Plan/Approve/Execute)
+            ...
+        database.py  # 실행 상태 및 활성 스레드 관리 (In-Memory)
+        main.py      # 앱 진입점
+    frontend/      # React + Vite 프론트엔드
+        src/
+            App.tsx    # 메인 UI (워크플로우 상태, 에이전트 탭)
+            api/       # 백엔드 API 클라이언트
             ...
 tests/           # pytest 기반 백엔드 테스트
 uploads/         # 업로드 파일 저장소
@@ -30,6 +51,18 @@ uploads/         # 업로드 파일 저장소
 
 ## 설치 및 실행
 
+### 필수 환경 변수 설정
+
+이 프로젝트는 **Azure AI Projects** 및 **Azure OpenAI** 서비스를 사용합니다. 실행 전 환경 변수 설정이 필요합니다.
+
+`src/backend/.env` 파일을 생성하고 다음 정보를 입력하세요:
+
+```ini
+AZURE_AI_PROJECT_CONNECTION_STRING="your-azure-ai-project-connection-string"
+```
+
+> **참고**: Connection String은 Azure AI Foundry 포털의 프로젝트 설정에서 확인할 수 있습니다.
+
 ### 백엔드 설치 및 실행
 
 ```bash
@@ -37,6 +70,9 @@ cd src/backend
 python -m venv .venv
 # Windows
 .\.venv\Scripts\Activate.ps1
+# Mac/Linux
+source .venv/bin/activate
+
 pip install -r requirements.txt
 uvicorn src.backend.main:app --reload
 ```
@@ -55,8 +91,22 @@ API 문서 (Swagger UI): http://localhost:8000/docs
 ```bash
 cd src/frontend
 npm install
-npm run dev
+npm run dev 
+or 
+npm run dev --prefix src/frontend
 ```
+
+### 테스트 실행
+
+백엔드는 `pytest`를 사용하여 작성된 단위 테스트 및 통합 테스트를 포함하고 있습니다.
+
+```bash
+cd src/backend
+# 가상환경 활성화 후
+pytest src/backend/tests
+```
+
+> **주의**: 테스트는 실제 Azure 리소스를 생성하고 삭제합니다. 과금 및 리소스 제한에 주의하세요.
 
 ---
 
