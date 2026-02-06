@@ -118,34 +118,33 @@ tests/                # 백엔드 테스트 코드
 - Python 3.9 이상
 - Node.js 18+ 및 npm
 
-## 🚀 간편 실행 (Quick Start)
+## �️ 설치 및 설정 (Installation & Setup)
 
-필수 패키지가 설치된 후, PowerShell 스크립트로 전체 시스템을 손쉽게 제어할 수 있습니다.
+### 1. 라이브러리 설치 (Library Installation)
 
-> **사전 준비**: 최초 실행 전 아래의 [수동 설치 및 실행](#수동-설치-및-실행-manual-installation) 섹션을 참고하여 Python(`requirements.txt`) 및 Node(`package.json`) 의존성을 먼저 설치해주세요.
+**Backend (Python)**
 
-**1. 전체 서비스 시작**
 ```powershell
-.\start_all.ps1
+# 가상환경 생성 및 활성화
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# 의존성 설치
+pip install -r requirements.txt
 ```
-- **MCP 서버 4종** (Sales, Supply, HR, Weather)
-- **Backend API Server** (Port 8000)
-- **Frontend Development Server** (Port 5173)
-- 위 서비스들이 각각 별도의 터미널 창에서 실행됩니다.
 
-**2. 전체 서비스 종료**
-```powershell
-.\stop_all.ps1
+**Frontend (Node.js)**
+
+```bash
+cd src/frontend
+npm install
 ```
-- 실행된 모든 Python 및 Node.js 프로세스를 안전하게 종료하고 터미널 창을 닫습니다.
 
-## 🛠️ 수동 설치 및 실행 (Manual Installation)
-
-### 1 필수 환경 변수 설정
+### 2. 환경 변수 설정 (Environment Configuration)
 
 이 프로젝트는 **Azure AI Projects** 및 **Azure OpenAI** 서비스를 사용합니다. 실행 전 환경 변수 설정이 필요합니다.
 
-`src/backend/.env` 파일을 생성하고 정보를 입력하세요.:
+`src/backend/.env` 파일을 생성하고 정보를 입력하세요:
 
 ```ini
 # Azure AI Project 연결 문자열 (Azure AI Studio -> Project Settings에서 확인 가능)
@@ -172,20 +171,20 @@ AZURE_TENANT_ID=""
 
 > **참고**: Connection String은 Azure AI Foundry 포털의 프로젝트 설정에서 확인할 수 있습니다.
 
-### 2. 백엔드 설치 및 실행
+## ▶️ 서버 실행 (Server Execution)
+
+설치 및 설정이 완료된 후, 각 서버를 실행합니다.
+
+### 1. 백엔드 실행 (Backend)
 
 ```powershell
-# 가상환경 생성 및 활성화
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+# 가상환경 활성화 (필요시)
+# .\.venv\Scripts\Activate.ps1
 
-# 의존성 설치 및 서버 실행
-pip install -r requirements.txt
 uvicorn src.backend.main:app --reload
 ```
 
 서버가 정상적으로 실행되면:
-
 ```
 INFO:     Uvicorn running on http://127.0.0.1:8000
 ...
@@ -193,17 +192,16 @@ Agent Framework API 서버를 시작합니다...
 API 문서 (Swagger UI): http://localhost:8000/docs
 ```
 
-### 3. 프론트엔드 설치 및 실행
+### 2. 프론트엔드 실행 (Frontend)
 
 ```bash
 cd src/frontend
-npm install
 npm run dev 
 # or 
 npm run dev --prefix src/frontend
 ```
 
-### 4. MCP 서버 실행 (필수)
+### 3. MCP 서버 실행 (MCP Servers)
 
 에이전트가 도구를 사용하려면 해당 MCP 서버가 실행되어 있어야 합니다. (별도의 터미널에서 실행하거나 `start_all.ps1` 사용)
 
@@ -223,6 +221,25 @@ python src/mcp/mcp-supply-chain/supply_server.py --sse
 # 4. Weather Server (Port: 8004)
 python src/mcp/mcp-weather/weather_server.py --sse
 ```
+
+## 🚀 간편 실행 (Quick Start)
+
+필수 패키지가 설치 및 환경 설정이 완료된 후, PowerShell 스크립트로 전체 시스템을 손쉽게 제어할 수 있습니다.
+
+**1. 전체 서비스 시작**
+```powershell
+.\start_all.ps1
+```
+- **MCP 서버 4종** (Sales, Supply, HR, Weather)
+- **Backend API Server** (Port 8000)
+- **Frontend Development Server** (Port 5173)
+- 위 서비스들이 각각 별도의 터미널 창에서 실행됩니다.
+
+**2. 전체 서비스 종료**
+```powershell
+.\stop_all.ps1
+```
+- 실행된 모든 Python 및 Node.js 프로세스를 안전하게 종료하고 터미널 창을 닫습니다.
 
 ## 📖 API 명세 및 개발 가이드 (API & Development)
 
