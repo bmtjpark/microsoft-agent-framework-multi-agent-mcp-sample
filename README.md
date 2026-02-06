@@ -145,10 +145,29 @@ tests/                # 백엔드 테스트 코드
 
 이 프로젝트는 **Azure AI Projects** 및 **Azure OpenAI** 서비스를 사용합니다. 실행 전 환경 변수 설정이 필요합니다.
 
-`src/backend/.env` 파일을 생성하고 다음 정보를 입력하세요:
+`src/backend/.env` 파일을 생성하고 정보를 입력하세요.:
 
 ```ini
-AZURE_AI_PROJECT_CONNECTION_STRING="your-azure-ai-project-connection-string"
+# Azure AI Project 연결 문자열 (Azure AI Studio -> Project Settings에서 확인 가능)
+AZURE_AI_PROJECT_CONNECTION_STRING=""
+# Azure AI Project 이름
+AZURE_AI_PROJECT_NAME=""
+# Azure AI Services 리소스 이름
+AZURE_AI_SERVICE_NAME=""
+# Azure 환경 이름 (예: dev, prod)
+AZURE_ENV_NAME=""
+# Azure Key Vault 엔드포인트 URL
+AZURE_KEY_VAULT_ENDPOINT=""
+# Azure 리전 위치 (예: eastus, koreacentral)
+AZURE_LOCATION=""
+# Azure OpenAI 모델 배포 이름 (예: gpt-4o)
+AZURE_MODEL_DEPLOYMENT_NAME=""
+# Azure 리소스 그룹 이름
+AZURE_RESOURCE_GROUP=""
+# Azure 구독 ID
+AZURE_SUBSCRIPTION_ID=""
+# Azure 테넌트 ID
+AZURE_TENANT_ID=""
 ```
 
 > **참고**: Connection String은 Azure AI Foundry 포털의 프로젝트 설정에서 확인할 수 있습니다.
