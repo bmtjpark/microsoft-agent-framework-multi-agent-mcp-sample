@@ -14,6 +14,9 @@ AVAILABLE_WORKFLOWS = ["hr-onboarding", "research-news", "trip-planner"]
 # In-memory storage for execution state
 executions_db: Dict[str, Dict[str, Any]] = {}
 
+# Cache for created agent IDs to prevent duplicates
+agent_cache: Dict[str, str] = {}
+
 # Agent Definitions
 AGENTS_CONFIG = {
     "Identity Agent": {
@@ -31,27 +34,32 @@ AGENTS_CONFIG = {
 }
 
 def ensure_agent(client, name, config):
+    # Check cache first
+    if name in agent_cache:
+        print(f"Using cached agent: {name} (ID: {agent_cache[name]})")
+        return agent_cache[name]
+    
     try:
-        # Use simple iteration for now; in prod use filter if available
-        assistants = client.list()
-        # Assistants from Azure AI Agents might come as an iterator or paged object
-        # If it's a list or iterable directly:
-        agents_data = assistants
-        if hasattr(assistants, "data"):
-            agents_data = assistants.data
-
-        for agent in agents_data:
+        # Try to find existing agent by name
+        assistants = list(client.list())  # Convert to list to handle iterator
+        for agent in assistants:
             if agent.name == name:
+                print(f"Found existing agent: {name} (ID: {agent.id})")
+                agent_cache[name] = agent.id
                 return agent.id
     except Exception as e:
         print(f"Error checking existing agents: {e}")
     
+    # If not found, create new agent
     try:
+        print(f"Creating new agent: {name}")
         agent = client.create_agent(
             name=name,
             instructions=config["instructions"],
             model=config["model"]
         )
+        print(f"Created agent: {name} (ID: {agent.id})")
+        agent_cache[name] = agent.id
         return agent.id
     except Exception as e:
         print(f"Error creating agent {name}: {e}")
@@ -190,35 +198,24 @@ async def plan_workflow(workflow_name: str, input_data: WorkflowInput):
     if workflow_name != "hr-onboarding":
          raise HTTPException(status_code=400, detail="Planning only supported for hr-onboarding")
 
-    # Ensure agents exist (pre-check)
-    agent_ids = {}
-    try:
-        client = get_agents_client()
-        agent_ids = get_onboarding_agents(client)
-    except Exception as e:
-        print(f"Warning: agent init failed: {e}")
-
+    # Don't create agents in plan phase - just prepare the plan
     execution_id = str(uuid.uuid4())
     inputs = input_data.inputs
     name = inputs.get("name", "Candidate")
     role = inputs.get("role", "Role")
 
-    id_id = agent_ids.get("Identity Agent", "N/A")
-    it_id = agent_ids.get("IT Agent", "N/A")
-    tr_id = agent_ids.get("Training Agent", "N/A")
-
     plan_text = f"""**{name} ({role})님을 위한 온보딩 계획**
 
-1. **Identity Agent** (ID: `{id_id}`)
+1. **Identity Agent**
    - 작업: 후보자 이름을 기반으로 고유한 회사 이메일 주소를 생성합니다.
 
-2. **IT Agent** (ID: `{it_id}`)
+2. **IT Agent**
    - 작업: '{role}' 직무에 적합한 하드웨어(노트북, 주변기기)를 결정하고 할당합니다.
 
-3. **Training Agent** (ID: `{tr_id}`)
+3. **Training Agent**
    - 작업: '{role}' 직무를 위한 필수 규정 준수 교육 및 직무별 과정을 배정합니다.
 
-*위의 할당된 에이전트와 작업을 검토해 주세요. 진행하려면 '승인'을 클릭하세요.*"""
+*위의 계획을 검토해 주세요. 진행하려면 '승인'을 클릭하세요.*"""
 
     initial_state = {
         "execution_id": execution_id,

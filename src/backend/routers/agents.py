@@ -48,7 +48,11 @@ async def list_agents():
     client = get_agents_client()
     try:
         # Azure AI Project Agents list
-        assistants = client.list(limit=50) # returns ItemPaged
+        try:
+            assistants = client.list(limit=50) # returns ItemPaged
+        except AttributeError:
+            # If list method doesn't exist, return empty list for now
+            assistants = []
         
         response_agents = []
         for agent in assistants:
