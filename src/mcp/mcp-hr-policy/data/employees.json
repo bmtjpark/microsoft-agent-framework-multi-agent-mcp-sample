@@ -1,0 +1,45 @@
+[
+  {
+    "id": "emp_001",
+    "name": "홍길동",
+    "department": "개발팀",
+    "leave_balance": {
+      "vacation": 0,
+      "sick": 5,
+      "personal": 2
+    },
+    "pending_requests": [
+      {
+        "type": "vacation",
+        "days": 3,
+        "status": "Pending"
+      },
+      {
+        "type": "vacation",
+        "days": 3,
+        "status": "Pending"
+      },
+      {
+        "type": "vacation",
+        "days": 3,
+        "status": "Pending"
+      },
+      {
+        "type": "vacation",
+        "days": 3,
+        "status": "Pending"
+      }
+    ]
+  },
+  {
+    "id": "emp_002",
+    "name": "김철수",
+    "department": "영업팀",
+    "leave_balance": {
+      "vacation": 5,
+      "sick": 10,
+      "personal": 0
+    },
+    "pending_requests": []
+  }
+]

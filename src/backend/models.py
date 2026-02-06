@@ -15,6 +15,7 @@ class AgentCreate(BaseModel):
     model: str  # 사용할 모델명 (예: gpt-4o-mini)
     instructions: str  # 에이전트 지시사항 (System Prompt)
     tools: Optional[List[str]] = []  # 사용할 도구 목록 (예: code_interpreter)
+    mcp_tools: Optional[List[str]] = [] # 사용할 MCP 프로토콜 목록 (예: mcp-hr-policy)
 
 class AgentUpdate(BaseModel):
     name: Optional[str] = None
@@ -28,6 +29,7 @@ class AgentResponse(BaseModel):
     model: str
     instructions: str
     tools: List[str]
+    mcp_tools: Optional[List[str]] = []
     created_at: int
 
 # --- 스레드 모델 (Thread Models) ---

@@ -1,0 +1,29 @@
+[
+  {
+    "sku": "WIDGET-X100",
+    "name": "X100 \uace0\uae09 \uc704\uc82f",
+    "category": "Electronics",
+    "stock": 3150,
+    "min_threshold": 200,
+    "location": "\ucc3d\uace0 A",
+    "price": 99.99
+  },
+  {
+    "sku": "WIDGET-X200",
+    "name": "X200 \ud504\ub85c \uc704\uc82f",
+    "category": "Electronics",
+    "stock": 500,
+    "min_threshold": 100,
+    "location": "\ucc3d\uace0 B",
+    "price": 149.99
+  },
+  {
+    "sku": "BOLT-M5",
+    "name": "M5 \uac15\ucca0 \ubcfc\ud2b8",
+    "category": "Hardware",
+    "stock": 5000,
+    "min_threshold": 1000,
+    "location": "\ucc3d\uace0 A",
+    "price": 0.1
+  }
+]

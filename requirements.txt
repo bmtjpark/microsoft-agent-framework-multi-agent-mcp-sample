@@ -8,3 +8,7 @@ python-multipart
 openai
 httpx
 pytest
+mcp
+httpx
+uvicorn
+starlette

@@ -63,11 +63,13 @@ def get_inference_client():
         # Current SDK constructs: https://<region>.api.azureml.ms/projects/<id>/openai/threads -> 404
         
         base_url_str = str(_inference_client.base_url)
+        # Fix logic removed as it was causing 404s in this environment
         if base_url_str.endswith("/openai/") or base_url_str.endswith("/openai"):
-             import re
+             pass
+             # import re
              # Remove /openai or /openai/ from the end
-             new_base = re.sub(r"/openai/?$", "/", base_url_str.rstrip("/"))
-             _inference_client.base_url = new_base
+             # new_base = re.sub(r"/openai/?$", "/", base_url_str.rstrip("/"))
+             # _inference_client.base_url = new_base
             
     return _inference_client
 

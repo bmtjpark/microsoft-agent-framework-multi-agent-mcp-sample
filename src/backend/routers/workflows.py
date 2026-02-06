@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from ..models import WorkflowInput, WorkflowExecutionResponse
-from ..client import get_inference_client
+from ..client import get_agents_client
 import uuid
 import time
 import asyncio
@@ -32,48 +32,89 @@ AGENTS_CONFIG = {
 
 def ensure_agent(client, name, config):
     try:
-        assistants = client.beta.assistants.list(limit=50)
-        for agent in assistants.data:
+        # Use simple iteration for now; in prod use filter if available
+        assistants = client.list_agents()
+        # Assistants from Azure AI Agents might come as an iterator or paged object
+        # If it's a list or iterable directly:
+        agents_data = assistants
+        if hasattr(assistants, "data"):
+            agents_data = assistants.data
+
+        for agent in agents_data:
             if agent.name == name:
                 return agent.id
-    except:
-        pass
+    except Exception as e:
+        print(f"Error checking existing agents: {e}")
     
-    agent = client.beta.assistants.create(
-        name=name,
-        instructions=config["instructions"],
-        model=config["model"]
-    )
-    return agent.id
+    try:
+        agent = client.create_agent(
+            name=name,
+            instructions=config["instructions"],
+            model=config["model"]
+        )
+        return agent.id
+    except Exception as e:
+        print(f"Error creating agent {name}: {e}")
+        return None
 
 def get_onboarding_agents(client):
     agent_ids = {}
     for name, config in AGENTS_CONFIG.items():
-        agent_ids[name] = ensure_agent(client, name, config)
+        aid = ensure_agent(client, name, config)
+        if aid:
+             agent_ids[name] = aid
     return agent_ids
 
 def run_agent_task(client, agent_id, user_content):
-    thread = client.beta.threads.create()
-    client.beta.threads.messages.create(
-        thread_id=thread.id,
-        role="user",
-        content=user_content
-    )
-    run = client.beta.threads.runs.create_and_poll(
-        thread_id=thread.id,
-        assistant_id=agent_id
-    )
-    
-    if run.status == "completed":
-        messages = client.beta.threads.messages.list(thread_id=thread.id)
-        # messages are in reverse chronological order
-        msg_content = messages.data[0].content[0].text.value
-        return msg_content
-    else:
-        return f"Error: {run.status}"
+    try:
+        thread = client.threads.create()
+        client.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=user_content
+        )
+        run = client.runs.create(
+            thread_id=thread.id,
+            agent_id=agent_id
+        )
+        
+        # Simple polling loop
+        while run.status in ["queued", "in_progress", "requires_action"]:
+            time.sleep(1)
+            run = client.runs.get(thread_id=thread.id, run_id=run.id)
+            # Simplistic handling: no tool outputs in this workflow currently
+            if run.status == "requires_action":
+                # If we encountered a tool call we didn't expect, break or fail
+                # For this specific HR workflow, we expect simple text.
+                print("Unexpected requires_action in HR workflow")
+                break
+        
+        if run.status == "completed":
+            messages = client.messages.list(thread_id=thread.id)
+            # messages are usually reverse chronological
+            # Convert iterator to list to access index 0
+            messages_list = list(messages)
+            if messages_list:
+                 msg_content = "No content"
+                 # Check latest message content
+                 for c in messages_list[0].content:
+                     if c.type == 'text':
+                         msg_content = c.text.value
+                         break
+                 return msg_content
+            else:
+                 return "No response message found."
+        else:
+            return f"Error: Run status {run.status}"
+            
+    except Exception as e:
+        return f"Error executing task: {str(e)}"
 
 def process_hr_onboarding_agents(execution_id: str, input_data: dict):
-    client = get_inference_client()
+    # Create a fresh client inside the task
+    from ..client import get_agents_client
+    client = get_agents_client()
+    
     agent_ids = get_onboarding_agents(client)
     
     candidate_name = input_data.get("name", "Unknown")
@@ -92,31 +133,44 @@ def process_hr_onboarding_agents(execution_id: str, input_data: dict):
     try:
         # Step 1: Identity
         update_status("in_progress")
-        id_response = run_agent_task(client, agent_ids["Identity Agent"], f"({candidate_name})님을 위한 이메일을 생성해주세요 (한국어로 답변)")
-        update_status("in_progress", {
-            "agent": "Identity Agent",
-            "action": "이메일 생성",
-            "details": id_response,
-            "timestamp": int(time.time())
-        })
+        if "Identity Agent" in agent_ids:
+            id_response = run_agent_task(client, agent_ids["Identity Agent"], f"({candidate_name})님을 위한 이메일을 생성해주세요 (한국어로 답변)")
+            update_status("in_progress", {
+                "agent": "Identity Agent",
+                "action": "이메일 생성",
+                "details": id_response,
+                "timestamp": int(time.time())
+            })
+        else:
+            update_status("in_progress", {
+                "agent": "Identity Agent",
+                "action": "Error",
+                "details": "Agent not found",
+                "timestamp": int(time.time())
+            })
 
         # Step 2: IT
-        it_response = run_agent_task(client, agent_ids["IT Agent"], f"역할: {role}에 따른 장비를 할당해주세요 (한국어로 답변)")
-        update_status("in_progress", {
-            "agent": "IT Agent",
-            "action": "자산 할당",
-            "details": it_response,
-            "timestamp": int(time.time())
-        })
+        if "IT Agent" in agent_ids:
+            it_response = run_agent_task(client, agent_ids["IT Agent"], f"역할: {role}에 따른 장비를 할당해주세요 (한국어로 답변)")
+            update_status("in_progress", {
+                "agent": "IT Agent",
+                "action": "자산 할당",
+                "details": it_response,
+                "timestamp": int(time.time())
+            })
 
         # Step 3: Training
-        tr_response = run_agent_task(client, agent_ids["Training Agent"], f"역할: {role}에 따른 교육 과정을 배정해주세요 (한국어로 답변)")
-        update_status("completed", {
-            "agent": "Training Agent",
-            "action": "교육 과정 배정",
-            "details": tr_response,
-            "timestamp": int(time.time())
-        })
+        if "Training Agent" in agent_ids:
+            tr_response = run_agent_task(client, agent_ids["Training Agent"], f"역할: {role}에 따른 교육 과정을 배정해주세요 (한국어로 답변)")
+            update_status("completed", {
+                "agent": "Training Agent",
+                "action": "교육 과정 배정",
+                "details": tr_response,
+                "timestamp": int(time.time())
+            })
+        
+        # If we reached here, mark completed if not already
+        executions_db[execution_id]["status"] = "completed"
 
     except Exception as e:
         print(f"Error in onboarding workflow: {e}")
@@ -139,7 +193,7 @@ async def plan_workflow(workflow_name: str, input_data: WorkflowInput):
     # Ensure agents exist (pre-check)
     agent_ids = {}
     try:
-        client = get_inference_client()
+        client = get_agents_client()
         agent_ids = get_onboarding_agents(client)
     except Exception as e:
         print(f"Warning: agent init failed: {e}")

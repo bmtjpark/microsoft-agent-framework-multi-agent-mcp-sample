@@ -1,0 +1,42 @@
+[
+  {
+    "id": "cust_001",
+    "name": "태산 물산 (Acme Corp)",
+    "segment": "Enterprise",
+    "risk_score": "Low",
+    "revenue_ytd": 150000,
+    "last_interaction": "2024-03-10",
+    "interactions": [
+      {
+        "date": "2026-02-05",
+        "type": "Meeting",
+        "notes": "CEO가 엔터프라이즈 플러스 요금제 업그레이드에 관심을 보임."
+      },
+      {
+        "date": "2024-03-10",
+        "type": "Meeting",
+        "notes": "Q2 로드맵 논의. 클라이언트가 더 나은 리포팅 기능을 요청함."
+      },
+      {
+        "date": "2024-02-15",
+        "type": "Email",
+        "notes": "갱신 계약서 초안 발송."
+      }
+    ]
+  },
+  {
+    "id": "cust_002",
+    "name": "베타 주식회사 (Beta Inc)",
+    "segment": "SMB",
+    "risk_score": "High",
+    "revenue_ytd": 12000,
+    "last_interaction": "2024-01-20",
+    "interactions": [
+      {
+        "date": "2024-01-20",
+        "type": "Support Call",
+        "notes": "다운타임으로 인한 불만 접수. 서비스 해지 언급."
+      }
+    ]
+  }
+]

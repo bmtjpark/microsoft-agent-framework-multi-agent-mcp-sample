@@ -4,6 +4,7 @@ export interface Agent {
   model: string;
   instructions: string;
   tools: string[];
+  mcp_tools?: string[];
   created_at: number;
 }
 
@@ -11,6 +12,8 @@ export interface AgentCreate {
   name: string;
   model: string;
   instructions: string;
+  tools?: string[];
+  mcp_tools?: string[];
 }
 
 export interface Thread {

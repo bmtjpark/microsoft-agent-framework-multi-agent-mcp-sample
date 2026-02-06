@@ -5,6 +5,13 @@ import Markdown from 'react-markdown';
 import { Send, Bot, User, Loader2, MessageSquare, Paperclip, X, FileIcon, Plus, PlusCircle, Play, CheckCircle2, Clock, Trash2 } from 'lucide-react';
 import { cn } from './lib/utils';
 
+const MCP_EXAMPLES: Record<string, string[]> = {
+  'mcp-hr-policy': ['emp_001 직원의 남은 휴가는?', 'emp_001의 휴가 신청 내역 조회해줘'],
+  'mcp-sales-crm': ['태산 물산의 최근 활동 내역 보여줘', '태산 물산의 리스크 점수는?'],
+  'mcp-supply-chain': ['WIDGET-X100 제품 재고 알려줘', '재고 부족한 상품 있어?'],
+  'mcp-weather': ['서울 날씨 어때?', '부산 날씨 알려줘']
+};
+
 function App() {
   const [activeTab, setActiveTab] = useState<'chat' | 'workflow'>('chat');
   
@@ -27,7 +34,27 @@ function App() {
 
   // Create Agent State
   const [showCreateAgent, setShowCreateAgent] = useState(false);
-  const [newAgent, setNewAgent] = useState({ name: '', model: 'gpt-4o-mini', instructions: '' });
+  const [newAgent, setNewAgent] = useState<{name: string, model: string, instructions: string, mcp_tools: string[]}>({ 
+    name: '', model: 'gpt-4o-mini', instructions: '', mcp_tools: [] 
+  });
+  
+  const mcpOptions = [
+    { id: 'mcp-hr-policy', label: 'HR (인사)', desc: "휴가 조회/신청" },
+    { id: 'mcp-sales-crm', label: 'Sales (매출)', desc: "고객/주문 데이터" },
+    { id: 'mcp-supply-chain', label: 'Supply (재고)', desc: "재고 확인" },
+    { id: 'mcp-weather', label: 'Weather (날씨)', desc: "날씨 조회" },
+  ];
+
+  const handleMcpChange = (mcpId: string, checked: boolean) => {
+    setNewAgent(prev => {
+      // Single selection mode: If checked, replace all with new one. If unchecked, clear it.
+      const updatedTools = checked 
+        ? [mcpId]
+        : [];
+      
+      return { ...prev, mcp_tools: updatedTools };
+    });
+  };
   
   // File upload state
   const [isUploading, setIsUploading] = useState(false);
@@ -182,7 +209,7 @@ function App() {
           const created = await api.createAgent(newAgent);
           setAgents(prev => [...prev, created]);
           setShowCreateAgent(false);
-          setNewAgent({ name: '', model: 'gpt-4o-mini', instructions: '' });
+          setNewAgent({ name: '', model: 'gpt-4o-mini', instructions: '', mcp_tools: [] });
           handleSelectAgent(created);
       } catch (error) {
           console.error("Failed to create agent", error);
@@ -746,7 +773,23 @@ function App() {
                       )}
                     </button>
                   </form>
-                  <p className="text-center text-xs text-gray-400">
+
+                    {selectedAgent && selectedAgent.mcp_tools && (
+                      <div className="flex flex-wrap gap-2 mt-3 mb-1 px-1 justify-center">
+                        {selectedAgent.mcp_tools.flatMap(toolId => MCP_EXAMPLES[toolId] || []).map((example, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => setInput(example)}
+                            className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:text-blue-600 transition-colors border border-gray-200 hover:border-blue-100 font-medium"
+                          >
+                            {example}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                  <p className="text-center text-xs text-gray-400 mt-2">
                     AI는 실수를 할 수 있습니다. 중요한 정보를 확인하세요.
                   </p>
                 </div>
@@ -803,6 +846,27 @@ function App() {
                             value={newAgent.model} 
                           />
                       </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">MCP 도구 연결 (선택)</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {mcpOptions.map(opt => (
+                            <label key={opt.id} className="flex items-start gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                              <input 
+                                type="checkbox"
+                                checked={newAgent.mcp_tools?.includes(opt.id) || false}
+                                onChange={(e) => handleMcpChange(opt.id, e.target.checked)}
+                                className="mt-1"
+                              />
+                              <div>
+                                <div className="text-sm font-medium text-gray-800">{opt.label}</div>
+                                <div className="text-xs text-gray-500">{opt.desc}</div>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
                       <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">지침 (페르소나)</label>
                           <textarea 
