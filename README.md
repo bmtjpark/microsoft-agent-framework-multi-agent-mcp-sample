@@ -1,7 +1,7 @@
-# Multi-Agent HR Onboarding System (Azure AI Agents)
+# MS 에이전트 프레임워크 기반 멀티 에이전트 시스템 (MCP 프로토콜 연동)
 
-이 프로젝트는 **Azure AI Agents Service** (구 Azure Foundry Agents)를 활용하여 HR 온보딩 프로세스를 자동화한 **멀티 에이전트 시스템**입니다.
-FastAPI 백엔드와 React 프론트엔드로 구성되어 있으며, **Identity, IT, Training** 전문 에이전트들이 협력하여 **계획(Plan) → 승인(Approve) → 실행(Execute)** 워크플로우를 수행합니다.
+이 프로젝트는 **Microsoft Agent Framework** (Azure AI Agents Service)와 **MCP (Model Context Protocol)**를 활용하여 구현된 멀티 에이전트 시스템 예제입니다.
+HR 온보딩 시나리오를 통해 **Identity, IT, Training** 전문 에이전트들이 협력하여 **계획(Plan) → 승인(Approve) → 실행(Execute)** 워크플로우를 수행하는 과정을 보여줍니다.
 
 ## ✨ 핵심 변경 사항 및 기능
 
