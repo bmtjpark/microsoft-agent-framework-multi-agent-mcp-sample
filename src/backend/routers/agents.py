@@ -48,7 +48,7 @@ async def list_agents():
     client = get_agents_client()
     try:
         # Azure AI Project Agents list
-        assistants = client.list_agents(limit=50) # returns ItemPaged
+        assistants = client.list(limit=50) # returns ItemPaged
         
         response_agents = []
         for agent in assistants:

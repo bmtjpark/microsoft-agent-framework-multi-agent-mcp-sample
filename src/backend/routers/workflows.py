@@ -33,7 +33,7 @@ AGENTS_CONFIG = {
 def ensure_agent(client, name, config):
     try:
         # Use simple iteration for now; in prod use filter if available
-        assistants = client.list_agents()
+        assistants = client.list()
         # Assistants from Azure AI Agents might come as an iterator or paged object
         # If it's a list or iterable directly:
         agents_data = assistants

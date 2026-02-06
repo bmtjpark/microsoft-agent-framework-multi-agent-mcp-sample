@@ -1,14 +1,17 @@
 # Set PYTHONPATH to project root
 $env:PYTHONPATH = $PSScriptRoot
 
+# Activate virtual environment
+& ".\.venv\Scripts\Activate.ps1"
+
 # Function to start a process in a new window
 function Start-ServerWindow {
     param(
         [string]$Title,
         [string]$Command
     )
-    # Set window title and run command
-    $Args = "-NoExit", "-Command", "& { `$Host.UI.RawUI.WindowTitle = '$Title'; $Command }"
+    # Set window title, set PYTHONPATH, activate venv, and run command
+    $Args = "-NoExit", "-Command", "& { `$Host.UI.RawUI.WindowTitle = '$Title'; `$env:PYTHONPATH = '$PSScriptRoot'; & '$PSScriptRoot\.venv\Scripts\Activate.ps1'; $Command }"
     Start-Process powershell -ArgumentList $Args
 }
 
